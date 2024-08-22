@@ -19,12 +19,12 @@ create table Pessoas
 	nome varchar(50) not null,
 	cpf varchar(14) not null unique,
 	status int null,
-	--restriÁıes
+	--restri√ß√µes
 	check(status in (1,2,3))
 )
 go
 
--- Consultar informaÁıes sobre a tabela
+-- Consultar informa√ß√µes sobre a tabela
 exec sp_help pessoas
 go
 
@@ -38,7 +38,7 @@ create table Clientes
 	credito decimal(10,2) not null,
 	-- chave estrangeira Fk
 	foreign key(pessoaID) references Pessoas(idPessoa),
-	--restriÁıes
+	--restri√ß√µes
 	check (renda >= 700.00),
 	check (credito >= 100.00)
 )
@@ -109,7 +109,7 @@ go
 
 
 -----------------------------------------------------------------------------------------------------------------
---Consultar todas as pessoas que s„o clientes
+--Consultar todas as pessoas que s√£o clientes
 -----------------------------------------------------------------------------------------------------------------
 
 select Pessoas.idPessoa Cod_Cliente, Pessoas.nome Cliente,
@@ -129,4 +129,78 @@ from
 	Pessoas p 
 INNER JOIN
 	Clientes c on c.pessoaId = p.idPessoa
+go
+
+-----------------------------------------------
+---CADASTAR CINCO VENDEDORES - INSERT NA TABELA VENDEDORES
+----------------------------------------------
+INSERT INTO Vendedores (pessoaId, salario)
+values(2,1500.00)
+go
+
+INSERT INTO Vendedores 
+VALUES (4, 2000.00),
+	   (6, 2500.00),
+	   (8, 1000.00),
+	   (10, 5500.00)
+go
+
+select p.idPessoa Cod_Vendedor, p.nome Vendedor,
+	   p.cpf CPF_Vendedor, p.status Situacao,
+	   v.salario Salario
+from
+	Pessoas p, Vendedores v
+where
+	p.idPessoa = v.pessoaId
+go
+
+select p.idPessoa Cod_Vendedor, p.nome Vendedor,
+	   p.cpf CPF_Vendedor, p.status Situacao,
+	   v.salario Salario
+from Pessoas p
+INNER JOIN Vendedores v ON v.pessoaId = p.idPessoa
+go
+
+create table Pedidos
+(
+	idPedido int not null primary key identity,
+	data datetime not null,
+	valor money null,
+	status int null,
+	vendedorId int not null,
+	clienteId int not null
+	-- chave estrangeira Fk
+	foreign key(vendedorId) references Vendedores(pessoaId),
+	foreign key(clienteId) references Clientes(pessoaId),
+	--restri√ß√µes
+	check (status between 1 and 3),
+)
+go
+
+---------------
+---Cadastrar pedidos
+---------------
+INSERT INTO Pedidos(data, status, vendedorId, clienteId)
+Values ('2023-25-12', 1, 2, 1)
+go
+
+insert into Pedidos(data, status, vendedorId, clienteId) 
+values (GETDATE(), 1, 4, 1),
+	   (GETDATE(), 2, 6, 5),
+	   ('2024-17-04', 1, 8, 7),
+	   ('2023-04-10', 3, 6, 1)
+go
+
+select * from Pedidos
+go
+
+----consultar todos os clientes que fizeram pedidos
+
+select p.idPessoa Cod_Cliente, p.nome Cliente,
+	   p.cpf CPF, p.status Situacao,
+	   c.renda Renda_Cliente, c.credito credito_cliente,
+	   pe.idPedido NumeroPedido, pe.data Datapedido,
+	   pe.status SituacaoPedido, pe.vendedorId CodVendedor
+from Pessoas p, Clientes c, Pedidos pe
+where p.idPessoa = c.pessoaId and c.pessoaId = pe.clienteId
 go
